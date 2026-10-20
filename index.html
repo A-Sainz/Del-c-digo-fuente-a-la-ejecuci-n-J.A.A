@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Del código fuente a la ejecución</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, Arial, sans-serif; line-height: 1.6; margin: 0; }
+    main { max-width: 980px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+    h1, h2 { line-height: 1.2; }
+    pre { background: rgba(127,127,127,.12); padding: .85rem; border-radius: 8px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { border: 1px solid rgba(127,127,127,.35); text-align: left; padding: .55rem; }
+    .nota { border-left: 4px solid #3b82f6; padding: .4rem .8rem; background: rgba(59,130,246,.1); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Del código fuente a la ejecución</h1>
+    <p>Guía didáctica con ejemplos prácticos sobre cómo un programa pasa de una idea escrita por un desarrollador a instrucciones ejecutadas por la CPU.</p>
+
+    <h2>1. Introducción</h2>
+    <p>El procesador no entiende directamente lenguajes de alto nivel. Por eso un programa recorre etapas como <strong>preprocesado</strong>, <strong>compilación</strong>, <strong>ensamblado</strong>, <strong>enlazado</strong>, <strong>carga</strong> y <strong>ejecución</strong>.</p>
+    <pre><code>int resultado = a + b;</code></pre>
+
+    <h2>2. Código fuente</h2>
+    <p>Es el texto escrito por el programador con variables, funciones, bucles, condicionales y estructuras de datos.</p>
+    <pre><code>int main() {
+    int a = 10;
+    int b = 20;
+    int resultado = a + b;
+    return 0;
+}</code></pre>
+
+    <h2>3. Preprocesador (C/C++)</h2>
+    <p>Antes de compilar, el preprocesador expande directivas como <code>#include</code> y <code>#define</code>.</p>
+    <pre><code>#include &lt;stdio.h&gt;
+#define MAX 100
+
+#ifdef DEBUG
+    printf("Modo depuración");
+#endif</code></pre>
+
+    <h2>4. Compilador</h2>
+    <p>Analiza sintaxis, comprueba reglas, detecta errores, optimiza y genera código de bajo nivel adaptado a una arquitectura concreta (x86-64, ARM64, RISC-V...).</p>
+    <pre><code>resultado = a + b; // puede convertirse en varias instrucciones assembly</code></pre>
+
+    <h2>5. Lenguaje ensamblador</h2>
+    <p>Representa casi de forma directa lo que ejecuta la CPU.</p>
+    <pre><code>mov r0, #1
+mov r1, #1
+add r2, r0, r1</code></pre>
+
+    <h2>7. Código objeto</h2>
+    <p>El compilador/ensamblador produce archivos <code>.o</code> con código máquina, datos, símbolos y reubicaciones, por ejemplo <code>programa.o</code>.</p>
+
+    <h2>8. Enlazador (linker)</h2>
+    <p>Combina módulos y resuelve referencias externas:</p>
+    <pre><code>main.o
+utilidades.o
+red.o</code></pre>
+    <p>También vincula bibliotecas (por ejemplo <code>printf</code>).</p>
+
+    <h2>11. Memoria de un proceso</h2>
+    <p>Durante ejecución, el proceso usa zonas como <code>.text</code>, <code>.data</code>, <code>.bss</code>, heap y stack.</p>
+
+    <h2>15. Heap</h2>
+    <p>Zona para asignación dinámica de memoria.</p>
+    <pre><code>int *numero = malloc(sizeof(int));
+Persona persona = new Persona();</code></pre>
+
+    <h2>17. Stack y Heap</h2>
+    <table>
+      <thead>
+        <tr><th>Stack</th><th>Heap</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Relacionado con llamadas a funciones</td><td>Memoria dinámica</td></tr>
+        <tr><td>Contiene estado de ejecución</td><td>Reserva durante la ejecución</td></tr>
+        <tr><td>Gestión generalmente automática</td><td>Gestión dependiente del lenguaje/entorno</td></tr>
+        <tr><td>Estructura LIFO</td><td>No funciona como pila de llamadas</td></tr>
+        <tr><td>Variables locales y parámetros</td><td>Datos y objetos dinámicos</td></tr>
+      </tbody>
+    </table>
+    <p class="nota">La representación de crecimiento opuesto Stack/Heap es un modelo simplificado, no universal.</p>
+
+    <h2>18. Depurador</h2>
+    <p>Permite usar breakpoints, ejecución paso a paso, inspección de variables, registros, memoria y pila para detectar errores.</p>
+
+    <h2>20. Descompilador</h2>
+    <p>Reconstruye código de alto nivel aproximado desde binario:</p>
+    <pre><code>int suma(int a, int b) {
+    return a + b;
+}</code></pre>
+    <p>No recupera exactamente el original: se pierden nombres, comentarios, tipos y estructura por optimizaciones/transformaciones.</p>
+
+    <h2>21. Análisis forense de memoria</h2>
+    <p>Con herramientas como Volatility se investigan procesos, módulos, estructuras y artefactos presentes en memoria.</p>
+  </main>
+</body>
+</html>
