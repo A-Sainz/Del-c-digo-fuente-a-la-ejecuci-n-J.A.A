@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "fronted-design": {
+      "source": "xrkseek/xrk-agt",
+      "sourceType": "github",
+      "skillPath": ".cursor/skills/fronted-design/SKILL.md",
+      "computedHash": "34fb4f05203bb0d675ef114cd776fda405a3774a1705e82c0f019cbf05e3638d"
+    }
+  }
+}
