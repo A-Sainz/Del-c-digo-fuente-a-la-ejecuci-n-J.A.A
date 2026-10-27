@@ -4,99 +4,846 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Del código fuente a la ejecución</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <style>
-    :root { color-scheme: light dark; }
-    body { font-family: system-ui, Arial, sans-serif; line-height: 1.6; margin: 0; }
-    main { max-width: 980px; margin: 0 auto; padding: 2rem 1rem 3rem; }
-    h1, h2 { line-height: 1.2; }
-    pre { background: rgba(127,127,127,.12); padding: .85rem; border-radius: 8px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    th, td { border: 1px solid rgba(127,127,127,.35); text-align: left; padding: .55rem; }
-    .nota { border-left: 4px solid #3b82f6; padding: .4rem .8rem; background: rgba(59,130,246,.1); }
+    :root {
+      color-scheme: dark;
+      --tinta: #0F1424;
+      --tinta-alta: #18203A;
+      --hondo: #0A0E1C;
+      --papel: #F2EEE3;
+      --acero: #A3AECA;
+      --ambar: #FFB454;
+      --borde: #2A3454;
+      --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+      --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      line-height: 1.75;
+      margin: 0;
+      background: var(--tinta);
+      color: var(--papel);
+      font-size: 17px;
+    }
+
+    header {
+      padding: 3.4rem 1rem 2.2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: clamp(2rem, 5.5vw, 3.4rem);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin: 0;
+      color: var(--papel);
+    }
+
+    header .cursor { color: var(--ambar); animation: parpadeo 1.1s steps(1) infinite; }
+
+    @keyframes parpadeo { 50% { opacity: 0; } }
+
+    header p {
+      margin: 1.2rem auto 0;
+      max-width: 56ch;
+      color: var(--acero);
+      font-size: 1.05rem;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .35rem;
+      padding: .6rem .8rem;
+      background: rgba(15, 20, 36, .95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--borde);
+    }
+
+    nav button {
+      font: inherit;
+      font-family: var(--mono);
+      font-size: .9rem;
+      padding: .45rem .9rem;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--acero);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color .15s, background .15s;
+    }
+
+    nav button:hover { color: var(--papel); background: var(--tinta-alta); }
+    nav button.activo { background: var(--ambar); color: var(--tinta); font-weight: 600; }
+    nav button:focus-visible { outline: 2px solid var(--ambar); outline-offset: 2px; }
+
+    main {
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3.5rem;
+    }
+
+    section.vista { display: none; }
+    section.vista.visible { display: block; }
+
+    h2 {
+      font-family: var(--mono);
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: var(--papel);
+      margin: 2.4rem 0 .7rem;
+      line-height: 1.3;
+      padding-bottom: .45rem;
+      border-bottom: 1px solid var(--borde);
+    }
+
+    h2:first-child { margin-top: .4rem; }
+
+    h3 { font-size: 1.15rem; color: var(--papel); margin: 1.6rem 0 .4rem; }
+
+    p { margin: .6rem 0; color: var(--papel); }
+    ul, ol { padding-left: 1.4rem; }
+    li { margin: .4rem 0; }
+    li::marker { color: var(--ambar); }
+    strong { color: var(--papel); font-weight: 600; }
+    em { color: var(--acero); }
+
+    a { color: var(--ambar); }
+    a:focus-visible { outline: 2px solid var(--ambar); outline-offset: 2px; }
+
+    .caja {
+      border-radius: 6px;
+      padding: .85rem 1.05rem;
+      margin: 1rem 0;
+      border-left: 4px solid var(--acero);
+      background: var(--tinta-alta);
+    }
+
+    .caja .titulo {
+      display: block;
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: .9rem;
+      margin-bottom: .3rem;
+      color: var(--acero);
+    }
+
+    .caja p { margin: .4rem 0; }
+
+    .simple { border-left-color: var(--ambar); }
+    .simple .titulo { color: var(--ambar); }
+
+    .analogia, .ejemplo, .nota { border-left-color: var(--acero); }
+    .analogia .titulo, .ejemplo .titulo, .nota .titulo { color: var(--acero); }
+
+    .ejemplo { border-radius: 6px; padding: .85rem 1.05rem; margin: 1rem 0; background: var(--tinta-alta); }
+
+    pre {
+      background: var(--hondo);
+      color: var(--papel);
+      border: 1px solid var(--borde);
+      padding: .85rem 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: .88rem;
+      line-height: 1.6;
+      margin: .7rem 0;
+    }
+
+    code { font-family: var(--mono); }
+    p code, li code, td code, .caja code, .ficha code, .destacado code {
+      background: var(--hondo);
+      color: var(--ambar);
+      padding: .1rem .35rem;
+      border-radius: 4px;
+      border: 1px solid var(--borde);
+      font-size: .88em;
+    }
+
+    .pasos {
+      display: grid;
+      gap: .5rem;
+      margin: 1.1rem 0;
+      counter-reset: paso;
+      padding: 0;
+      list-style: none;
+    }
+
+    .pasos li {
+      counter-increment: paso;
+      background: var(--tinta-alta);
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      padding: .65rem .85rem .65rem 3.1rem;
+      position: relative;
+      margin: 0;
+    }
+
+    .pasos li::before {
+      content: counter(paso);
+      position: absolute;
+      left: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--ambar);
+      color: var(--tinta);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: .85rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.1rem 0;
+      background: var(--tinta-alta);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--borde);
+    }
+
+    th, td {
+      border: 1px solid var(--borde);
+      text-align: left;
+      padding: .6rem .7rem;
+      vertical-align: top;
+    }
+
+    th { background: var(--ambar); color: var(--tinta); font-family: var(--mono); font-size: .9rem; font-weight: 600; }
+
+    .ficha {
+      background: var(--tinta-alta);
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
+      margin: 1.1rem 0;
+    }
+
+    .ficha h4 { margin: 0 0 .4rem; color: var(--papel); font-family: var(--mono); font-size: 1.02rem; font-weight: 600; }
+    .ficha p { margin: .4rem 0; }
+
+    .destacado {
+      text-align: center;
+      background: var(--tinta-alta);
+      border: 1px solid var(--borde);
+      border-top: 3px solid var(--ambar);
+      border-radius: 6px;
+      padding: 1.3rem 1.1rem;
+      margin: 1.4rem 0;
+    }
+
+    .destacado p { color: var(--acero); margin: .35rem 0; }
+    .destacado p strong { color: var(--papel); }
+
+    footer {
+      text-align: center;
+      padding: 1.4rem 1rem;
+      color: var(--acero);
+      font-size: .88rem;
+      border-top: 1px solid var(--borde);
+      background: var(--tinta-alta);
+    }
+
+    @media (max-width: 600px) {
+      body { font-size: 16px; }
+      header { padding: 2.4rem 1rem 1.6rem; }
+      header p { font-size: 1rem; }
+      h2 { font-size: 1.25rem; margin-top: 2rem; }
+      nav button { font-size: .85rem; padding: .4rem .7rem; }
+      main { padding: 1.5rem 1rem 3rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Del código fuente a la ejecución</h1>
-    <p>Guía didáctica con ejemplos prácticos sobre cómo un programa pasa de una idea escrita por un desarrollador a instrucciones ejecutadas por la CPU.</p>
 
-    <h2>1. Introducción</h2>
-    <p>El procesador no entiende directamente lenguajes de alto nivel. Por eso un programa recorre etapas como <strong>preprocesado</strong>, <strong>compilación</strong>, <strong>ensamblado</strong>, <strong>enlazado</strong>, <strong>carga</strong> y <strong>ejecución</strong>.</p>
-    <pre><code>int resultado = a + b;</code></pre>
+<header>
+  <h1>Del código fuente<br>a la ejecución<span class="cursor" aria-hidden="true">▌</span></h1>
+  <p>Una guía sencilla para entender cómo un programa escrito por una persona termina ejecutándose dentro de la computadora. Sin conocimientos técnicos previos.</p>
+</header>
 
-    <h2>2. Código fuente</h2>
-    <p>Es el texto escrito por el programador con variables, funciones, bucles, condicionales y estructuras de datos.</p>
-    <pre><code>int main() {
+<nav id="menu" aria-label="Secciones de la guía">
+  <button data-vista="inicio" class="activo">Inicio</button>
+  <button data-vista="viaje">El viaje del código</button>
+  <button data-vista="memoria">La memoria</button>
+  <button data-vista="herramientas">Herramientas</button>
+  <button data-vista="resumen">Resumen y glosario</button>
+</nav>
+
+<main>
+
+  <!-- ==================== INICIO ==================== -->
+  <section id="inicio" class="vista visible">
+    <h2>¿De qué trata esto?</h2>
+    <p>
+      Cuando una persona programa, escribe instrucciones con palabras en inglés como
+      <code>resultado = a + b</code>. Pero la computadora no entiende esas palabras:
+      su procesador (el "cerebro" de la máquina) solo sabe ejecutar instrucciones
+      eléctricas llamadas <strong>código máquina</strong>.
+    </p>
+
+    <div class="caja simple">
+      <span class="titulo">En palabras simples</span>
+      Es como escribir una receta de cocina en español para alguien que solo entiende
+      señales. Alguien tiene que traducir la receta paso a paso hasta convertirla en
+      acciones que la otra persona pueda seguir. Ese "alguien" es un conjunto de
+      programas llamados <strong>compilador</strong>, <strong>ensamblador</strong> y
+      <strong>enlazador</strong>.
+    </div>
+
+    <div class="caja analogia">
+      <span class="titulo">Analogía</span>
+      Piensa en traducir un libro del español al idioma de otro país. Primero se lee
+      el texto original (el código fuente), luego se traduce frase por frase
+      (compilación), se revisa que la traducción tenga sentido (detección de errores),
+      y al final queda un libro que el otro país puede leer (el programa ejecutable).
+    </div>
+
+    <h2>Los 10 pasos del viaje</h2>
+    <p>Todo programa recorre este camino, desde la idea del programador hasta la pantalla de la computadora:</p>
+    <ol class="pasos">
+      <li><strong>Código fuente:</strong> el programador escribe el programa con un lenguaje como C, Java o Python.</li>
+      <li><strong>Preprocesado</strong> (en C/C++): se preparan los textos y directivas antes de compilar.</li>
+      <li><strong>Compilación:</strong> un programa traduce el código a un nivel más cercano a la máquina.</li>
+      <li><strong>Ensamblado:</strong> las instrucciones se convierten en los números que la CPU ejecuta.</li>
+      <li><strong>Archivo objeto:</strong> se guardan "piezas intermedias" del programa.</li>
+      <li><strong>Enlazado:</strong> se unen todas las piezas y las bibliotecas externas.</li>
+      <li><strong>Archivo ejecutable:</strong> nace el programa final, listo para funcionar.</li>
+      <li><strong>Carga:</strong> el sistema operativo prepara memoria y recursos para el programa.</li>
+      <li><strong>Proceso en memoria:</strong> el programa ocupa su espacio de memoria.</li>
+      <li><strong>Ejecución:</strong> la CPU empieza a leer y ejecutar las instrucciones.</li>
+    </ol>
+
+    <div class="destacado">
+      <p><strong>Idea clave</strong></p>
+      <p>Entre el código que escribes y lo que ejecuta la computadora hay varios pasos de traducción.
+      Si algo falla en esos pasos, el programa ni siquiera llega a arrancar.</p>
+    </div>
+
+    <div class="caja nota">
+      <span class="titulo">Dato curioso</span>
+      El mismo código fuente puede traducirse para diferentes "tipos" de computadoras
+      (por ejemplo, PCs con procesador Intel, teléfonos con ARM o placas con RISC-V).
+      Es como traducir el mismo libro a distintos idiomas: la historia es la misma,
+      pero cada versión es especial para su lector.
+    </div>
+  </section>
+
+  <!-- ==================== EL VIAJE DEL CÓDIGO ==================== -->
+  <section id="viaje" class="vista">
+    <h2>1. Código fuente</h2>
+    <p>
+      El <strong>código fuente</strong> es el texto que escribe la persona programadora.
+      Se usa un lenguaje de <strong>alto nivel</strong>: uno pensado para que los humanos
+      lo entiendan con facilidad, usando conceptos como variables, funciones, bucles
+      (repetición), condicionales (decisiones) y objetos.
+    </p>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <pre><code>int main() {
     int a = 10;
     int b = 20;
     int resultado = a + b;
     return 0;
 }</code></pre>
+      Este pequeño programa suma dos números y guarda el resultado.
+      Para nosotros es obvio; para la computadora todavía no significa nada.
+    </div>
 
-    <h2>3. Preprocesador (C/C++)</h2>
-    <p>Antes de compilar, el preprocesador expande directivas como <code>#include</code> y <code>#define</code>.</p>
-    <pre><code>#include &lt;stdio.h&gt;
-#define MAX 100
+    <h2>2. Preprocesador (solo en C/C++)</h2>
+    <p>
+      Antes de compilar, en lenguajes como C y C++ trabaja el <strong>preprocesador</strong>.
+      Es un "preparador de terreno": copia archivos externos, reemplaza atajos por su
+      texto real y prepara el código para el compilador.
+    </p>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <pre><code>#include &lt;stdio.h&gt;   // "pega aquí" lo que trae la biblioteca de entrada/salida
+#define MAX 100       // cada vez que aparezca MAX, úsese 100
 
 #ifdef DEBUG
     printf("Modo depuración");
 #endif</code></pre>
+    </div>
+    <div class="caja analogia">
+      <span class="titulo">Analogía</span>
+      Es como rellenar una plantilla: donde dice "NOMBRE_AQUÍ" pones un nombre real,
+      y donde había atajos de texto, ahora aparece su contenido completo.
+    </div>
 
-    <h2>4. Compilador</h2>
-    <p>Analiza sintaxis, comprueba reglas, detecta errores, optimiza y genera código de bajo nivel adaptado a una arquitectura concreta (x86-64, ARM64, RISC-V...).</p>
-    <pre><code>resultado = a + b; // puede convertirse en varias instrucciones assembly</code></pre>
+    <h2>3. Compilador</h2>
+    <p>
+      El <strong>compilador</strong> es el gran traductor. Toma el código de alto nivel y
+      hace varias cosas a la vez:
+    </p>
+    <ul>
+      <li>Revisa que la gramática del código sea correcta (<strong>sintaxis</strong>).</li>
+      <li>Comprueba que el significado tenga sentido (<strong>semántica</strong>), por ejemplo, que no uses una variable que no existe.</li>
+      <li>Si encuentra errores, te avisa <em>antes</em> de que el programa corra.</li>
+      <li>Optimiza: mejora el código para que sea más rápido o ocupe menos.</li>
+      <li>Genera código bajo nivel adaptado a la computadora de destino.</li>
+    </ul>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <p>Una sola línea en C puede convertirse en varias instrucciones de máquina:</p>
+      <pre><code>resultado = a + b;   // una línea "humana"
+// la computadora puede ver algo como: cargar a, cargar b, sumar, guardar</code></pre>
+    </div>
+    <div class="caja simple">
+      <span class="titulo">En palabras simples</span>
+      El compilador es como un profesor que corrige tu redacción antes de enviar la carta:
+      revisa ortografía, coherencia, y solo cuando todo está bien, la envía traducida.
+    </div>
 
-    <h2>5. Lenguaje ensamblador</h2>
-    <p>Representa casi de forma directa lo que ejecuta la CPU.</p>
-    <pre><code>mov r0, #1
-mov r1, #1
-add r2, r0, r1</code></pre>
+    <h2>4. Lenguaje ensamblador</h2>
+    <p>
+      El <strong>lenguaje ensamblador</strong> (o <em>assembly</em>) es un lenguaje de
+      <strong>bajo nivel</strong>: uno muy cercano a lo que la CPU ejecuta de verdad.
+      Cada instrucción corresponde casi de forma directa a una operación de la máquina.
+    </p>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <pre><code>mov r0, #1      // pon el valor 1 en el registro r0
+mov r1, #1      // pon el valor 1 en el registro r1
+add r2, r0, r1  // suma r0 y r1, guarda el resultado en r2</code></pre>
+    </div>
+    <p>Conceptos que conviene conocer:</p>
+    <ul>
+      <li><strong>Registros:</strong> mini-almacenes muy rápidos dentro de la CPU.</li>
+      <li><strong>Instrucciones:</strong> las operaciones que la CPU sabe hacer (mover, sumar, comparar...).</li>
+      <li><strong>Direcciones de memoria:</strong> como los números de casa de los datos: indican dónde está cada cosa.</li>
+      <li><strong>Saltos:</strong> permiten cambiar el rumbo de la ejecución (ir a otra parte del programa).</li>
+    </ul>
+    <div class="caja analogia">
+      <span class="titulo">Analogía</span>
+      Si el código en C es una receta escrita en lenguaje cotidiano, el ensamblador es
+      la misma receta con instrucciones de precisión quirúrgica: "toma exactamente 250 g
+      de harina", paso a paso, sin dejar nada a la interpretación.
+    </div>
 
-    <h2>7. Código objeto</h2>
-    <p>El compilador/ensamblador produce archivos <code>.o</code> con código máquina, datos, símbolos y reubicaciones, por ejemplo <code>programa.o</code>.</p>
+    <h2>5. Ensamblador (la herramienta)</h2>
+    <p>
+      No confundas los dos términos: el <strong>lenguaje ensamblador</strong> es el idioma
+      con el que se escriben las instrucciones; el <strong>ensamblador</strong> es el
+      programa que convierte esas instrucciones en los números del código máquina.
+    </p>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <p>Una instrucción así:</p>
+      <pre><code>add r2, r0, r1</code></pre>
+      <p>se convierte en una secuencia binaria específica de la arquitectura, por ejemplo <code>111010001000...</code></p>
+    </div>
+    <p>El resultado se guarda en un archivo llamado <strong>archivo objeto</strong> (por ejemplo, <code>programa.o</code>).</p>
 
-    <h2>8. Enlazador (linker)</h2>
-    <p>Combina módulos y resuelve referencias externas:</p>
-    <pre><code>main.o
+    <h2>6. Código objeto</h2>
+    <p>
+      Un <strong>archivo objeto</strong> es una pieza intermedia del programa. No es todavía
+      un programa que pueda ejecutarse, pero ya contiene partes listas:
+    </p>
+    <ul>
+      <li>Código máquina (instrucciones traducidas).</li>
+      <li>Datos del programa.</li>
+      <li>Símbolos (nombres de funciones y variables).</li>
+      <li>Información de reubicación (indica dónde moverse cuando se una todo).</li>
+      <li>Referencias a funciones o variables que están en <em>otros</em> archivos.</li>
+    </ul>
+    <div class="caja analogia">
+      <span class="titulo">Analogía</span>
+      Es como una pieza de un rompecabezas: ya tiene imagen, pero todavía encaja con
+      otras piezas para formar el cuadro completo.
+    </div>
+
+    <h2>7. Enlazador (linker)</h2>
+    <p>
+      El <strong>enlazador</strong> junta todos los archivos objeto y "coser" sus bordes:
+      resuelve las referencias entre ellos y añade las bibliotecas externas que el
+      programa necesite.
+    </p>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <pre><code>main.o
 utilidades.o
-red.o</code></pre>
-    <p>También vincula bibliotecas (por ejemplo <code>printf</code>).</p>
+red.o
+        ↓  (enlazador)
+   programa ejecutable</code></pre>
+      <p>Otro caso típico: usas <code>printf("Hola")</code> en C. El código de esa función
+      no está en tu archivo: el enlazador es quien la encuentra en la biblioteca
+      estándar y la conecta a tu programa.</p>
+    </div>
+    <div class="caja simple">
+      <span class="titulo">En palabras simples</span>
+      Si el compilador traduce tus capítulos y el ensamblador convierte cada página a
+      una fuente imprimible, el enlazador encuaderna todos los capítulos en el orden
+      correcto para crear el libro final.
+    </div>
 
-    <h2>11. Memoria de un proceso</h2>
-    <p>Durante ejecución, el proceso usa zonas como <code>.text</code>, <code>.data</code>, <code>.bss</code>, heap y stack.</p>
-
-    <h2>15. Heap</h2>
-    <p>Zona para asignación dinámica de memoria.</p>
-    <pre><code>int *numero = malloc(sizeof(int));
-Persona persona = new Persona();</code></pre>
-
-    <h2>17. Stack y Heap</h2>
+    <h2>8. Archivo ejecutable</h2>
+    <p>Ya existe el programa completo. Su formato depende del sistema operativo:</p>
     <table>
-      <thead>
-        <tr><th>Stack</th><th>Heap</th></tr>
-      </thead>
+      <thead><tr><th>Formato</th><th>Sistema operativo</th></tr></thead>
       <tbody>
-        <tr><td>Relacionado con llamadas a funciones</td><td>Memoria dinámica</td></tr>
-        <tr><td>Contiene estado de ejecución</td><td>Reserva durante la ejecución</td></tr>
-        <tr><td>Gestión generalmente automática</td><td>Gestión dependiente del lenguaje/entorno</td></tr>
-        <tr><td>Estructura LIFO</td><td>No funciona como pila de llamadas</td></tr>
-        <tr><td>Variables locales y parámetros</td><td>Datos y objetos dinámicos</td></tr>
+        <tr><td><strong>PE</strong></td><td>Windows</td></tr>
+        <tr><td><strong>ELF</strong></td><td>Linux y otros sistemas Unix</td></tr>
+        <tr><td><strong>Mach-O</strong></td><td>Computadoras Apple (macOS)</td></tr>
       </tbody>
     </table>
-    <p class="nota">La representación de crecimiento opuesto Stack/Heap es un modelo simplificado, no universal.</p>
 
-    <h2>18. Depurador</h2>
-    <p>Permite usar breakpoints, ejecución paso a paso, inspección de variables, registros, memoria y pila para detectar errores.</p>
+    <h2>9. Cargador (loader)</h2>
+    <p>
+      Cuando haces doble clic o escribes el comando para abrir el programa, el sistema
+      operativo entra en acción. El <strong>cargador</strong> es la parte que prepara
+      todo para la ejecución:
+    </p>
+    <ul>
+      <li>Crea el espacio de memoria donde vivirá el programa.</li>
+      <li>Carga las partes necesarias del ejecutable.</li>
+      <li>Prepara las zonas de memoria.</li>
+      <li>Carga las bibliotecas dinámicas que se usan en común.</li>
+      <li>Deja todo listo para que la CPU empiece en el punto correcto.</li>
+    </ul>
+    <div class="ejemplo">
+      <span class="titulo">Ejemplo</span>
+      <pre><code>./programa</code></pre>
+      En Linux, al ejecutar ese comando, el sistema operativo crea un nuevo
+      <strong>proceso</strong> (una copia en marcha del programa) y organiza su memoria.
+    </div>
+    <div class="caja analogia">
+      <span class="titulo">Analogía</span>
+      Es como preparar un escenario antes de la obra: mesas, luces y utilería en su
+      lugar. El cargador no actúa la obra (eso lo hace la CPU), pero sin su trabajo,
+      la obra no podría empezar.
+    </div>
 
-    <h2>20. Descompilador</h2>
-    <p>Reconstruye código de alto nivel aproximado desde binario:</p>
-    <pre><code>int suma(int a, int b) {
+    <h2>10. Ejecución</h2>
+    <p>
+      Finalmente, la CPU comienza a leer las instrcciones máquina una por una:
+      cargar, sumar, comparar, saltar... Ese ciclo repetido millones de veces por
+      segundo es lo que percibimos como "el programa funcionando".
+    </p>
+    <div class="destacado">
+      <p><strong>Recorrido completo</strong></p>
+      <p>Código fuente → preprocesador → compilador → ensamblador → archivo objeto
+      → enlazador → ejecutable → cargador → proceso en memoria → ejecución</p>
+    </div>
+  </section>
+
+  <!-- ==================== LA MEMORIA ==================== -->
+  <section id="memoria" class="vista">
+    <h2>Cómo se organiza la memoria de un programa</h2>
+    <p>
+      Cuando el programa está en marcha, ocupa un espacio de memoria con varias zonas
+      especializadas. Aunque la organización exacta cambia según el sistema operativo
+      y la arquitectura, es útil conocer estas cinco:
+    </p>
+
+    <div class="ficha">
+      <h4>📘 Segmento .text (código)</h4>
+      <p>Guarda las <strong>instrucciones ejecutables</strong>: el código máquina traducido.</p>
+      <p><strong>Por seguridad</strong>, normalmente se puede leer y ejecutar, pero <em>no</em> modificar:
+      que una zona sea a la vez escribible y ejecutable daría demasiado poder a los ataques.</p>
+    </div>
+
+    <div class="ficha">
+      <h4>📗 Segmento .data (datos inicializados)</h4>
+      <p>Contiene <strong>variables globales o estáticas que ya tienen un valor</strong> desde el inicio.</p>
+      <pre><code>int contador = 10;</code></pre>
+      <p>Ese <code>10</code> debe estar disponible en el momento exacto en que arranca el programa.</p>
+    </div>
+
+    <div class="ficha">
+      <h4>📙 Segmento .bss (datos sin inicializar)</h4>
+      <p>Contiene <strong>variables globales o estáticas sin valor explícito</strong>; por defecto
+      se ponen a cero.</p>
+      <pre><code>int contador;</code></pre>
+      <p><strong>¿Para qué sirve esta separación?</strong> Así el ejecutable no necesita guardar
+      miles de ceros: solo reserva el espacio y los pone a cero al arrancar.</p>
+    </div>
+
+    <div class="ficha">
+      <h4>📦 Heap (memoria dinámica)</h4>
+      <p>Es la zona donde el programa <strong>pide memoria cuando la necesita</strong>, mientras ya se
+      está ejecutando. Su tamaño puede crecer o reducirse durante la ejecución.</p>
+      <div class="ejemplo">
+        <span class="titulo">Ejemplo</span>
+        <pre><code>// En C: pedir espacio para un número
+int *numero = malloc(sizeof(int));
+
+// En Java: crear un objeto (su memoria vive en el heap)
+Persona persona = new Persona();</code></pre>
+      </div>
+      <div class="caja analogia">
+        <span class="titulo">Analogía</span>
+        El heap es como alquilar un trastero cuando lo necesitas: pides espacio, lo usas
+        y luego se libera cuando ya no lo necesitas.
+      </div>
+    </div>
+
+    <div class="ficha">
+      <h4>📚 Stack (pila de llamadas)</h4>
+      <p>Se usa sobre todo para gestionar las <strong>llamadas a funciones</strong>. Guarda:</p>
+      <ul>
+        <li>Variables locales de cada función.</li>
+        <li>Los parámetros que recibe.</li>
+        <li>A dónde volver cuando la función termine.</li>
+      </ul>
+      <div class="ejemplo">
+        <span class="titulo">Ejemplo</span>
+        <pre><code>void funcion() {
+    int numero = 10;
+}</code></pre>
+        Al ejecutar <code>funcion()</code> se crea su contexto en la pila; cuando termina,
+        ese contexto desaparece y el programa vuelve a donde estaba.
+      </div>
+      <div class="caja simple">
+        <span class="titulo">En palabras simples</span>
+        El stack funciona como una <strong>pila de platos</strong> (LIFO: el último en entrar,
+        el primero en salir). Cada vez que una función llama a otra, se apila un nuevo
+        "plato"; cuando la función termina, se retira el último plato.
+      </div>
+    </div>
+
+    <h2>Stack vs. Heap: diferencias clave</h2>
+    <table>
+      <thead>
+        <tr><th>Stack (pila)</th><th>Heap</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Relacionado con las llamadas a funciones</td><td>Memoria dinámica</td></tr>
+        <tr><td>Guarda información de la ejecución en curso</td><td>Permite reservar memoria durante la ejecución</td></tr>
+        <tr><td>Gestión automática (el programa lo hace solo)</td><td>Gestión según el lenguaje y el entorno</td></tr>
+        <tr><td>Estructura LIFO (último entra, primero sale)</td><td>No funciona como pila de llamadas</td></tr>
+        <tr><td>Ideal para variables locales y parámetros</td><td>Ideal para datos y objetos dinámicos</td></tr>
+      </tbody>
+    </table>
+
+    <div class="caja nota">
+      <span class="titulo">Aclaración importante</span>
+      Muchos dibujos muestran al stack y al heap creciendo uno hacia arriba y otro hacia
+      abajo, chocando en el medio. Eso es un <strong>modelo simplificado</strong> para
+      explicar la idea: no es una regla universal ni se cumple igual en todas las
+      arquitecturas y sistemas operativos.
+    </div>
+  </section>
+
+  <!-- ==================== HERRAMIENTAS ==================== -->
+  <section id="herramientas" class="vista">
+    <h2>¿Cómo se analiza un programa en marcha?</h2>
+    <p>
+      Cuando queremos entender, reparar o investigar un programa, disponemos de
+      herramientas especializadas. Estas son las cuatro más importantes:
+    </p>
+
+    <div class="ficha">
+      <h4>🐞 Depurador (debugger)</h4>
+      <p>Permite <strong>observar el programa mientras se ejecuta</strong>, casi cámara en mano.</p>
+      <p>Sus funciones habituales:</p>
+      <ul>
+        <li>Marcar <strong>puntos de ruptura</strong>: el programa se pausa donde tú indiques.</li>
+        <li>Ejecutar <strong>paso a paso</strong>, instrucción a instrucción.</li>
+        <li>Examinar variables, registros y memoria.</li>
+        <li>Ver la pila de llamadas: qué función llamó a cuál.</li>
+        <li>Detectar y corregir errores.</li>
+      </ul>
+      <div class="caja analogia">
+        <span class="titulo">Analogía</span>
+        Es como una cámara lenta para tu programa: puedes congelar la acción y mirar
+        el valor de cada variable en ese instante exacto.
+      </div>
+      <p><strong>Se usa tanto para crear software como para analizar programas ajenos.</strong></p>
+    </div>
+
+    <div class="ficha">
+      <h4>🔄 Desensamblador</h4>
+      <p>Hace el proceso <strong>inverso al ensamblador</strong>: toma código máquina y trata de
+      mostrarlo como instrucciones de lenguaje ensamblador legibles.</p>
+      <div class="ejemplo">
+        <span class="titulo">Ejemplo</span>
+        <p>Una secuencia de bytes como <code>10111000 00001010</code> podría mostrarse como:</p>
+        <pre><code>mov eax, 10</code></pre>
+      </div>
+      <p>Es muy utilizado en:</p>
+      <ul>
+        <li>Ingeniería inversa (entender cómo funciona un programa sin fuente).</li>
+        <li>Análisis de malware (qué hace exactamente un virus).</li>
+        <li>Descubrimiento de vulnerabilidades.</li>
+        <li>Depuración y análisis de programas cuando no existe el código original.</li>
+      </ul>
+      <div class="caja nota">
+        <span class="titulo">Límite</span>
+        El desensamblador <strong>no recupera el código fuente original</strong>: solo traduce
+        la máquina a su "idioma casi-máquina".
+      </div>
+    </div>
+
+    <div class="ficha">
+      <h4>🧩 Descompilador</h4>
+      <p>Intenta algo más ambicioso: <strong>reconstruir código de alto nivel</strong> a partir de
+      un programa ya compilado.</p>
+      <div class="ejemplo">
+        <span class="titulo">Ejemplo</span>
+        <p>Desde un binario podría intentar reconstruir algo como:</p>
+        <pre><code>int suma(int a, int b) {
     return a + b;
 }</code></pre>
-    <p>No recupera exactamente el original: se pierden nombres, comentarios, tipos y estructura por optimizaciones/transformaciones.</p>
+      </div>
+      <p><strong>¿Por qué el resultado nunca es idéntico al original?</strong> Durante la compilación
+      se pierde información:</p>
+      <ul>
+        <li>Los nombres de las variables.</li>
+        <li>Los comentarios.</li>
+        <li>Algunos nombres originales de funciones.</li>
+        <li>La estructura exacta y los tipos de datos.</li>
+        <li>Las abstracciones que usó el programador.</li>
+      </ul>
+      <p>Además, las <strong>optimizaciones</strong> del compilador reorganizan el código de formas
+      que no se parecen a lo escrito originalmente.</p>
+      <div class="caja simple">
+        <span class="titulo">En palabras simples</span>
+        Un descompilador entrega una <strong>reconstrucción aproximada</strong>, como
+        reconstruir una vasija rota a partir de sus fragmentos: se parece, pero no es
+        la pieza original.
+      </div>
+    </div>
 
-    <h2>21. Análisis forense de memoria</h2>
-    <p>Con herramientas como Volatility se investigan procesos, módulos, estructuras y artefactos presentes en memoria.</p>
-  </main>
+    <div class="ficha">
+      <h4>🔎 Análisis forense de memoria</h4>
+      <p>Estudia el <strong>contenido de la memoria</strong> de una computadora o de un proceso
+      concreto, normalmente a partir de una "foto" (captura) de la memoria.</p>
+      <p>Una herramienta muy conocida es <strong>Volatility</strong>. A partir de una captura se pueden
+      investigar:</p>
+      <ul>
+        <li>Qué procesos estaban ejecutándose en ese momento.</li>
+        <li>Información y módulos cargados.</li>
+        <li>Estructuras internas del sistema.</li>
+        <li>Conexiones de red y otros rastros.</li>
+        <li>Datos que ya no están en el disco, pero sí quedaron en RAM.</li>
+      </ul>
+      <div class="caja analogia">
+        <span class="titulo">Analogía</span>
+        Es como la escena de un crimen: aunque los sospechosos (archivos) ya no están,
+        la memoria conserva huellas de lo que ocurrió. El analista forense las interpreta.
+      </div>
+      <p><strong>Es fundamental en la ciberseguridad:</strong> análisis forense digital y respuesta
+      ante incidentes (saber qué pasó cuando algo salió mal).</p>
+    </div>
+
+    <div class="destacado">
+      <p><strong>Las tres herramientas, en una frase cada una</strong></p>
+      <p>🐞 Depurador: <em>mira el programa mientras corre.</em></p>
+      <p>🔄 Desensamblador: <em>muestra el binario como instrucciones de máquina legibles.</em></p>
+      <p>🧩 Descompilador: <em>intenta devolver el binario a código de alto nivel aproximado.</em></p>
+      <p>🔎 Forense: <em>lee la memoria como si fuera una escena del crimen.</em></p>
+    </div>
+  </section>
+
+  <!-- ==================== RESUMEN Y GLOSARIO ==================== -->
+  <section id="resumen" class="vista">
+    <h2>El proceso, resumido en 10 pasos</h2>
+    <ol class="pasos">
+      <li>El programador escribe el <strong>código fuente</strong>.</li>
+      <li>En lenguajes que lo usan (C/C++), el <strong>preprocesador</strong> procesa las directivas.</li>
+      <li>El <strong>compilador</strong> transforma el código de alto nivel en código de bajo nivel.</li>
+      <li>El <strong>ensamblador</strong> convierte el lenguaje ensamblador en código máquina.</li>
+      <li>Se generan uno o varios <strong>archivos objeto</strong>.</li>
+      <li>El <strong>enlazador</strong> combina los módulos y resuelve referencias.</li>
+      <li>Se obtiene un <strong>archivo ejecutable</strong>.</li>
+      <li>El sistema operativo <strong>carga</strong> el programa.</li>
+      <li>Se crea un <strong>proceso</strong> y se organiza su espacio de memoria.</li>
+      <li>La <strong>CPU</strong> comienza a ejecutar las instrucciones.</li>
+    </ol>
+
+    <div class="destacado">
+      <p><strong>Idea final</strong></p>
+      <p>Para analizar un programa usamos depuradores, desensambladores y descompiladores.
+      En ciberseguridad, estos son clave para la ingeniería inversa, el análisis de
+      malware, la búsqueda de vulnerabilidades y el análisis forense.</p>
+    </div>
+
+    <h2>Glosario para no perderte</h2>
+    <table>
+      <thead>
+        <tr><th>Término</th><th>Qué significa (en una frase)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Código fuente</strong></td><td>El texto del programa que escribe la persona.</td></tr>
+        <tr><td><strong>Preprocesador</strong></td><td>Prepara el texto del programa antes de compilar (solo C/C++).</td></tr>
+        <tr><td><strong>Compilador</strong></td><td>Traduce el código de alto nivel a bajo nivel y detecta errores.</td></tr>
+        <tr><td><strong>Lenguaje ensamblador</strong></td><td>Lenguaje casi idéntico a las instrucciones de la CPU.</td></tr>
+        <tr><td><strong>Ensamblador</strong></td><td>Herramienta que convierte ensamblador en código máquina.</td></tr>
+        <tr><td><strong>Código máquina</strong></td><td>Los números binarios que la CPU ejecuta directamente.</td></tr>
+        <tr><td><strong>Archivo objeto</strong></td><td>Pieza intermedia del programa (aún no ejecutable).</td></tr>
+        <tr><td><strong>Enlazador (linker)</strong></td><td>Une piezas y bibliotecas para crear el ejecutable.</td></tr>
+        <tr><td><strong>Ejecutable</strong></td><td>El programa final, listo para abrirse (PE, ELF o Mach-O).</td></tr>
+        <tr><td><strong>Cargador (loader)</strong></td><td>Prepara memoria y recursos para arrancar el programa.</td></tr>
+        <tr><td><strong>Proceso</strong></td><td>El programa en marcha, con su propia memoria.</td></tr>
+        <tr><td><strong>.text</strong></td><td>Zona de memoria con las instrucciones del programa.</td></tr>
+        <tr><td><strong>.data</strong></td><td>Zona con variables globales que ya tienen valor.</td></tr>
+        <tr><td><strong>.bss</strong></td><td>Zona con variables globales sin valor (se ponen a cero).</td></tr>
+        <tr><td><strong>Heap</strong></td><td>Memoria que el programa pide mientras corre.</td></tr>
+        <tr><td><strong>Stack (pila)</strong></td><td>Memoria que gestiona las llamadas a funciones (LIFO).</td></tr>
+        <tr><td><strong>Depurador</strong></td><td>Herramienta para observar y pausar el programa en marcha.</td></tr>
+        <tr><td><strong>Desensamblador</strong></td><td>Muestra código máquina como instrucciones legibles.</td></tr>
+        <tr><td><strong>Descompilador</strong></td><td>Intenta reconstruir código de alto nivel (siempre aproximado).</td></tr>
+        <tr><td><strong>Forense de memoria</strong></td><td>Investiga qué quedó guardado en la memoria (ej. Volatility).</td></tr>
+        <tr><td><strong>LIFO</strong></td><td>"Último en entrar, primero en salir", como la pila de platos.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="caja nota">
+      <span class="titulo">¿Quieres seguir aprendiendo?</span>
+      Vuelve a cualquier sección con el menú de arriba. Cada ejemplo del código es
+      real y pequeño a propósito: mejor entender una línea bien que confundirse con cien.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Material didáctico: "Del código fuente a la ejecución" · Contenido basado en los apuntes del curso
+</footer>
+
+<script>
+  var botones = document.querySelectorAll("#menu button");
+  var vistas = document.querySelectorAll("section.vista");
+
+  function mostrar(id) {
+    vistas.forEach(function (v) { v.classList.toggle("visible", v.id === id); });
+    botones.forEach(function (b) { b.classList.toggle("activo", b.dataset.vista === id); });
+    window.scrollTo(0, 0);
+  }
+
+  botones.forEach(function (b) {
+    b.addEventListener("click", function () { mostrar(b.dataset.vista); });
+  });
+
+  if (location.hash) {
+    var inicial = location.hash.slice(1);
+    if (document.getElementById(inicial)) mostrar(inicial);
+  }
+</script>
+
 </body>
 </html>
