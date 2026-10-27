@@ -3,100 +3,431 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Guía didáctica sobre el recorrido de un programa desde el código fuente hasta la ejecución." />
   <title>Del código fuente a la ejecución</title>
   <style>
-    :root { color-scheme: light dark; }
-    body { font-family: system-ui, Arial, sans-serif; line-height: 1.6; margin: 0; }
-    main { max-width: 980px; margin: 0 auto; padding: 2rem 1rem 3rem; }
-    h1, h2 { line-height: 1.2; }
-    pre { background: rgba(127,127,127,.12); padding: .85rem; border-radius: 8px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    th, td { border: 1px solid rgba(127,127,127,.35); text-align: left; padding: .55rem; }
-    .nota { border-left: 4px solid #3b82f6; padding: .4rem .8rem; background: rgba(59,130,246,.1); }
+    :root {
+      color-scheme: dark;
+      --ink: #e8edf2;
+      --muted: #a9b8c5;
+      --faint: #718392;
+      --canvas: #08141d;
+      --canvas-raised: #0d202b;
+      --panel: #102a36;
+      --panel-light: #153644;
+      --line: rgba(183, 214, 225, .17);
+      --accent: #f3b562;
+      --accent-soft: rgba(243, 181, 98, .14);
+      --cyan: #74d4cf;
+      --code: #071016;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background:
+        radial-gradient(circle at 86% 0%, rgba(116, 212, 207, .12), transparent 34rem),
+        var(--canvas);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    a { color: var(--cyan); }
+    a:hover { color: var(--accent); }
+    a:focus-visible {
+      border-radius: 5px;
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      background: var(--accent);
+      color: #1a1610;
+      left: 1rem;
+      padding: .55rem .8rem;
+      position: absolute;
+      top: -5rem;
+      z-index: 2;
+    }
+
+    .skip-link:focus { top: 1rem; }
+
+    .shell {
+      margin: 0 auto;
+      max-width: 1180px;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    .hero {
+      border-bottom: 1px solid var(--line);
+      padding: clamp(3.5rem, 10vw, 7.5rem) 0 3.5rem;
+    }
+
+    .eyebrow {
+      align-items: center;
+      color: var(--accent);
+      display: flex;
+      font-size: .75rem;
+      font-weight: 700;
+      gap: .6rem;
+      letter-spacing: .16em;
+      margin: 0 0 1.2rem;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      background: var(--accent);
+      content: "";
+      height: 1px;
+      width: 2.5rem;
+    }
+
+    h1, h2 { line-height: 1.15; }
+
+    h1 {
+      font-size: clamp(2.8rem, 8vw, 6.6rem);
+      letter-spacing: -.065em;
+      margin: 0;
+      max-width: 900px;
+    }
+
+    .intro {
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      margin: 1.6rem 0 0;
+      max-width: 760px;
+    }
+
+    .content-grid {
+      align-items: start;
+      display: grid;
+      gap: clamp(2rem, 6vw, 5rem);
+      grid-template-columns: minmax(0, 1fr) 240px;
+      margin-top: 3.5rem;
+    }
+
+    .toc {
+      border-left: 1px solid var(--line);
+      font-size: .88rem;
+      padding-left: 1.25rem;
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    .toc-title {
+      color: var(--faint);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      margin: 0 0 .8rem;
+      text-transform: uppercase;
+    }
+
+    .toc ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .toc li + li { margin-top: .55rem; }
+    .toc a { color: var(--muted); text-decoration: none; }
+    .toc a:hover { color: var(--accent); }
+
+    article { min-width: 0; }
+
+    section {
+      border-top: 1px solid var(--line);
+      margin-top: 3.5rem;
+      padding-top: 2.5rem;
+      scroll-margin-top: 1rem;
+    }
+
+    section:first-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    h2 {
+      color: var(--ink);
+      font-size: clamp(1.6rem, 3vw, 2.35rem);
+      letter-spacing: -.03em;
+      margin: 0 0 1rem;
+    }
+
+    h2 .number {
+      color: var(--accent);
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      margin-bottom: .6rem;
+    }
+
+    p { color: var(--muted); margin: 0 0 1.25rem; }
+    strong { color: var(--ink); }
+    code {
+      background: var(--accent-soft);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .9em;
+      padding: .12em .32em;
+    }
+
+    pre {
+      background: var(--code);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      color: #d7e6ea;
+      font: .9rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      margin: 1.5rem 0 0;
+      overflow-x: auto;
+      padding: 1.15rem 1.3rem;
+      tab-size: 2;
+    }
+
+    .flow {
+      display: grid;
+      gap: .7rem;
+      grid-template-columns: repeat(3, 1fr);
+      list-style: none;
+      margin: 2rem 0 0;
+      padding: 0;
+    }
+
+    .flow li {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      font-size: .88rem;
+      padding: .8rem;
+    }
+
+    .flow li::before {
+      color: var(--accent);
+      content: counter(flow);
+      counter-increment: flow;
+      display: block;
+      font: .75rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      margin-bottom: .4rem;
+    }
+
+    .flow { counter-reset: flow; }
+
+    .table-wrap {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-top: 1.5rem;
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 480px;
+      width: 100%;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: .85rem 1rem;
+      text-align: left;
+    }
+
+    th {
+      background: var(--panel-light);
+      color: var(--ink);
+      font-size: .8rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    td { color: var(--muted); }
+    tr:last-child td { border-bottom: 0; }
+
+    .nota {
+      background: var(--accent-soft);
+      border: 1px solid rgba(243, 181, 98, .35);
+      border-radius: 12px;
+      color: var(--ink);
+      margin-top: 1.5rem;
+      padding: 1rem 1.15rem;
+    }
+
+    .nota strong { color: var(--accent); }
+
+    @media (max-width: 760px) {
+      .shell { padding: 1rem 1rem 3rem; }
+      .content-grid { display: block; margin-top: 2.5rem; }
+      .toc {
+        margin-bottom: 3rem;
+        padding: 1rem 0 1rem 1rem;
+        position: static;
+      }
+      .toc ol { columns: 2; column-gap: 1.5rem; }
+      .toc li { break-inside: avoid; }
+      .flow { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Del código fuente a la ejecución</h1>
-    <p>Guía didáctica con ejemplos prácticos sobre cómo un programa pasa de una idea escrita por un desarrollador a instrucciones ejecutadas por la CPU.</p>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="shell">
+    <header class="hero">
+      <p class="eyebrow">Guía de arquitectura de un programa</p>
+      <h1>Del código fuente a la ejecución</h1>
+      <p class="intro">Guía didáctica con ejemplos prácticos sobre cómo un programa pasa de una idea escrita por un desarrollador a instrucciones ejecutadas por la CPU.</p>
+    </header>
 
-    <h2>1. Introducción</h2>
-    <p>El procesador no entiende directamente lenguajes de alto nivel. Por eso un programa recorre etapas como <strong>preprocesado</strong>, <strong>compilación</strong>, <strong>ensamblado</strong>, <strong>enlazado</strong>, <strong>carga</strong> y <strong>ejecución</strong>.</p>
-    <pre><code>int resultado = a + b;</code></pre>
+    <div class="content-grid">
+      <main id="contenido">
+        <article>
+          <section id="introduccion">
+            <h2><span class="number">01 / Introducción</span>De la idea a la CPU</h2>
+            <p>El procesador no entiende directamente lenguajes de alto nivel. Por eso un programa recorre etapas como <strong>preprocesado</strong>, <strong>compilación</strong>, <strong>ensamblado</strong>, <strong>enlazado</strong>, <strong>carga</strong> y <strong>ejecución</strong>.</p>
+            <ul class="flow" aria-label="Etapas del recorrido de un programa">
+              <li>Preprocesado</li>
+              <li>Compilación</li>
+              <li>Ensamblado</li>
+              <li>Enlazado</li>
+              <li>Carga</li>
+              <li>Ejecución</li>
+            </ul>
+            <pre><code>int resultado = a + b;</code></pre>
+          </section>
 
-    <h2>2. Código fuente</h2>
-    <p>Es el texto escrito por el programador con variables, funciones, bucles, condicionales y estructuras de datos.</p>
-    <pre><code>int main() {
+          <section id="codigo-fuente">
+            <h2><span class="number">02 / Código fuente</span>El programa escrito</h2>
+            <p>Es el texto escrito por el programador con variables, funciones, bucles, condicionales y estructuras de datos.</p>
+            <pre><code>int main() {
     int a = 10;
     int b = 20;
     int resultado = a + b;
     return 0;
 }</code></pre>
+          </section>
 
-    <h2>3. Preprocesador (C/C++)</h2>
-    <p>Antes de compilar, el preprocesador expande directivas como <code>#include</code> y <code>#define</code>.</p>
-    <pre><code>#include &lt;stdio.h&gt;
+          <section id="preprocesador">
+            <h2><span class="number">03 / Preprocesador (C/C++)</span>Preparar el código</h2>
+            <p>Antes de compilar, el preprocesador expande directivas como <code>#include</code> y <code>#define</code>.</p>
+            <pre><code>#include &lt;stdio.h&gt;
 #define MAX 100
 
 #ifdef DEBUG
     printf("Modo depuración");
 #endif</code></pre>
+          </section>
 
-    <h2>4. Compilador</h2>
-    <p>Analiza sintaxis, comprueba reglas, detecta errores, optimiza y genera código de bajo nivel adaptado a una arquitectura concreta (x86-64, ARM64, RISC-V...).</p>
-    <pre><code>resultado = a + b; // puede convertirse en varias instrucciones assembly</code></pre>
+          <section id="compilador">
+            <h2><span class="number">04 / Compilador</span>Traducir y optimizar</h2>
+            <p>Analiza sintaxis, comprueba reglas, detecta errores, optimiza y genera código de bajo nivel adaptado a una arquitectura concreta (x86-64, ARM64, RISC-V...).</p>
+            <pre><code>resultado = a + b; // puede convertirse en varias instrucciones assembly</code></pre>
+          </section>
 
-    <h2>5. Lenguaje ensamblador</h2>
-    <p>Representa casi de forma directa lo que ejecuta la CPU.</p>
-    <pre><code>mov r0, #1
+          <section id="ensamblador">
+            <h2><span class="number">05 / Lenguaje ensamblador</span>Representar las instrucciones</h2>
+            <p>Representa casi de forma directa lo que ejecuta la CPU.</p>
+            <pre><code>mov r0, #1
 mov r1, #1
 add r2, r0, r1</code></pre>
+          </section>
 
-    <h2>7. Código objeto</h2>
-    <p>El compilador/ensamblador produce archivos <code>.o</code> con código máquina, datos, símbolos y reubicaciones, por ejemplo <code>programa.o</code>.</p>
+          <section id="codigo-objeto">
+            <h2><span class="number">07 / Código objeto</span>Preparar módulos compilados</h2>
+            <p>El compilador/ensamblador produce archivos <code>.o</code> con código máquina, datos, símbolos y reubicaciones, por ejemplo <code>programa.o</code>.</p>
+          </section>
 
-    <h2>8. Enlazador (linker)</h2>
-    <p>Combina módulos y resuelve referencias externas:</p>
-    <pre><code>main.o
+          <section id="enlazador">
+            <h2><span class="number">08 / Enlazador (linker)</span>Unir las piezas</h2>
+            <p>Combina módulos y resuelve referencias externas:</p>
+            <pre><code>main.o
 utilidades.o
 red.o</code></pre>
-    <p>También vincula bibliotecas (por ejemplo <code>printf</code>).</p>
+            <p>También vincula bibliotecas (por ejemplo <code>printf</code>).</p>
+          </section>
 
-    <h2>11. Memoria de un proceso</h2>
-    <p>Durante ejecución, el proceso usa zonas como <code>.text</code>, <code>.data</code>, <code>.bss</code>, heap y stack.</p>
+          <section id="memoria">
+            <h2><span class="number">11 / Memoria de un proceso</span>El espacio de ejecución</h2>
+            <p>Durante ejecución, el proceso usa zonas como <code>.text</code>, <code>.data</code>, <code>.bss</code>, heap y stack.</p>
+          </section>
 
-    <h2>15. Heap</h2>
-    <p>Zona para asignación dinámica de memoria.</p>
-    <pre><code>int *numero = malloc(sizeof(int));
+          <section id="heap">
+            <h2><span class="number">15 / Heap</span>Asignación dinámica</h2>
+            <p>Zona para asignación dinámica de memoria.</p>
+            <pre><code>int *numero = malloc(sizeof(int));
 Persona persona = new Persona();</code></pre>
+          </section>
 
-    <h2>17. Stack y Heap</h2>
-    <table>
-      <thead>
-        <tr><th>Stack</th><th>Heap</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Relacionado con llamadas a funciones</td><td>Memoria dinámica</td></tr>
-        <tr><td>Contiene estado de ejecución</td><td>Reserva durante la ejecución</td></tr>
-        <tr><td>Gestión generalmente automática</td><td>Gestión dependiente del lenguaje/entorno</td></tr>
-        <tr><td>Estructura LIFO</td><td>No funciona como pila de llamadas</td></tr>
-        <tr><td>Variables locales y parámetros</td><td>Datos y objetos dinámicos</td></tr>
-      </tbody>
-    </table>
-    <p class="nota">La representación de crecimiento opuesto Stack/Heap es un modelo simplificado, no universal.</p>
+          <section id="stack-heap">
+            <h2><span class="number">17 / Stack y Heap</span>Dos formas de organizar memoria</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Stack</th><th>Heap</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Relacionado con llamadas a funciones</td><td>Memoria dinámica</td></tr>
+                  <tr><td>Contiene estado de ejecución</td><td>Reserva durante la ejecución</td></tr>
+                  <tr><td>Gestión generalmente automática</td><td>Gestión dependiente del lenguaje/entorno</td></tr>
+                  <tr><td>Estructura LIFO</td><td>No funciona como pila de llamadas</td></tr>
+                  <tr><td>Variables locales y parámetros</td><td>Datos y objetos dinámicos</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="nota"><strong>Nota:</strong> La representación de crecimiento opuesto Stack/Heap es un modelo simplificado, no universal.</p>
+          </section>
 
-    <h2>18. Depurador</h2>
-    <p>Permite usar breakpoints, ejecución paso a paso, inspección de variables, registros, memoria y pila para detectar errores.</p>
+          <section id="depurador">
+            <h2><span class="number">18 / Depurador</span>Observar el programa</h2>
+            <p>Permite usar breakpoints, ejecución paso a paso, inspección de variables, registros, memoria y pila para detectar errores.</p>
+          </section>
 
-    <h2>20. Descompilador</h2>
-    <p>Reconstruye código de alto nivel aproximado desde binario:</p>
-    <pre><code>int suma(int a, int b) {
+          <section id="descompilador">
+            <h2><span class="number">20 / Descompilador</span>Volver desde el binario</h2>
+            <p>Reconstruye código de alto nivel aproximado desde binario:</p>
+            <pre><code>int suma(int a, int b) {
     return a + b;
 }</code></pre>
-    <p>No recupera exactamente el original: se pierden nombres, comentarios, tipos y estructura por optimizaciones/transformaciones.</p>
+            <p>No recupera exactamente el original: se pierden nombres, comentarios, tipos y estructura por optimizaciones/transformaciones.</p>
+          </section>
 
-    <h2>21. Análisis forense de memoria</h2>
-    <p>Con herramientas como Volatility se investigan procesos, módulos, estructuras y artefactos presentes en memoria.</p>
-  </main>
+          <section id="forense">
+            <h2><span class="number">21 / Análisis forense de memoria</span>Investigar artefactos</h2>
+            <p>Con herramientas como Volatility se investigan procesos, módulos, estructuras y artefactos presentes en memoria.</p>
+          </section>
+        </article>
+      </main>
+
+      <nav class="toc" aria-label="Contenido de la guía">
+        <p class="toc-title">En esta guía</p>
+        <ol>
+          <li><a href="#introduccion">Introducción</a></li>
+          <li><a href="#codigo-fuente">Código fuente</a></li>
+          <li><a href="#preprocesador">Preprocesador</a></li>
+          <li><a href="#compilador">Compilador</a></li>
+          <li><a href="#ensamblador">Ensamblador</a></li>
+          <li><a href="#codigo-objeto">Código objeto</a></li>
+          <li><a href="#enlazador">Enlazador</a></li>
+          <li><a href="#memoria">Memoria</a></li>
+          <li><a href="#heap">Heap</a></li>
+          <li><a href="#stack-heap">Stack y Heap</a></li>
+          <li><a href="#depurador">Depurador</a></li>
+          <li><a href="#descompilador">Descompilador</a></li>
+          <li><a href="#forense">Análisis forense</a></li>
+        </ol>
+      </nav>
+    </div>
+  </div>
 </body>
 </html>
