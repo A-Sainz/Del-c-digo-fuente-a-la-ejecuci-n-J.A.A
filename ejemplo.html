@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ejemplo didáctico del recorrido de un programa desde el código fuente hasta la ejecución." />
+  <title>Ejemplo: de código fuente a ejecución</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #08141d;
+      --surface: #102a36;
+      --surface-raised: #153644;
+      --text: #e8edf2;
+      --muted: #a9b8c5;
+      --accent: #f3b562;
+      --cyan: #74d4cf;
+      --code: #071016;
+      --line: rgba(183, 214, 225, .17);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      background: var(--background);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      line-height: 1.65;
+      margin: 0;
+    }
+    main { margin: 0 auto; max-width: 940px; padding: 3rem 1.25rem 5rem; }
+    h1, h2 { line-height: 1.15; }
+    h1 { font-size: clamp(2.4rem, 7vw, 5rem); letter-spacing: -.06em; margin: 0; }
+    h2 { color: var(--accent); font-size: 1.55rem; margin: 0 0 .8rem; }
+    p { color: var(--muted); }
+    .intro { border-bottom: 1px solid var(--line); padding-bottom: 2.5rem; }
+    .eyebrow {
+      color: var(--cyan);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      margin: 0 0 1rem;
+      text-transform: uppercase;
+    }
+    section {
+      border-top: 1px solid var(--line);
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+    }
+    section:first-of-type { border-top: 0; }
+    .stage {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-top: 1.25rem;
+      padding: 1.25rem;
+    }
+    .stage-label {
+      color: var(--cyan);
+      font: .75rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    pre {
+      background: var(--code);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 10px 10px 0;
+      color: #d7e6ea;
+      font: .9rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      margin: 1rem 0 0;
+      overflow-x: auto;
+      padding: 1rem;
+    }
+    code {
+      background: rgba(243, 181, 98, .14);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: .1em .3em;
+    }
+    .warning {
+      background: rgba(243, 181, 98, .12);
+      border: 1px solid rgba(243, 181, 98, .35);
+      border-radius: 10px;
+      color: var(--text);
+      margin-top: 1.25rem;
+      padding: 1rem;
+    }
+    .warning strong { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <p class="eyebrow">Ejemplo práctico</p>
+      <h1>Una suma hasta la CPU</h1>
+      <p>Este ejemplo sigue un programa pequeño que calcula <code>a + b</code>. Cada bloque representa una etapa descrita en la guía principal.</p>
+    </header>
+
+    <section>
+      <h2>1. Código fuente</h2>
+      <p>El programador escribe variables, una operación y un valor de retorno en un lenguaje de alto nivel.</p>
+      <div class="stage">
+        <span class="stage-label">Entrada del compilador</span>
+        <pre><code>int main() {
+    int a = 10;
+    int b = 20;
+    int resultado = a + b;
+    return 0;
+}</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Preprocesado</h2>
+      <p>Si el programa utiliza directivas como <code>#include</code> o <code>#define</code>, el preprocesador las expande antes de la compilación. En este fragmento no hay ninguna directiva, así que no se muestra una transformación concreta.</p>
+    </section>
+
+    <section>
+      <h2>3. Compilación y ensamblado</h2>
+      <p>El compilador analiza la sintaxis, comprueba reglas, puede optimizar y genera código de bajo nivel. Después, el ensamblador produce un archivo objeto con código máquina, símbolos y reubicaciones.</p>
+      <div class="stage">
+        <span class="stage-label">Representación assembly ilustrativa</span>
+        <pre><code>mov r0, #10
+mov r1, #20
+add r2, r0, r1</code></pre>
+      </div>
+      <p>La salida exacta depende del compilador, las opciones y la arquitectura, por lo que este bloque representa la idea de la traducción y no una salida universal.</p>
+    </section>
+
+    <section>
+      <h2>4. Código objeto y enlazado</h2>
+      <p>El archivo objeto puede combinarse con otros módulos y bibliotecas. El enlazador resuelve las referencias externas y construye el programa enlazado.</p>
+      <div class="stage">
+        <span class="stage-label">Módulos posibles</span>
+        <pre><code>main.o
+utilidades.o
+red.o</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Carga, memoria y ejecución</h2>
+      <p>Al cargarse, el proceso utiliza zonas como <code>.text</code>, <code>.data</code>, <code>.bss</code>, heap y stack. Las llamadas a funciones y variables locales se relacionan generalmente con el stack; la memoria dinámica se reserva en el heap.</p>
+      <div class="stage">
+        <span class="stage-label">Resultado conceptual</span>
+        <pre><code>resultado = 10 + 20;
+resultado = 30;</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. Observación y límites</h2>
+      <p>Un depurador permitiría avanzar paso a paso e inspeccionar variables, registros, memoria y pila. Un descompilador solo reconstruiría una aproximación del código original.</p>
+      <p class="warning"><strong>Importante:</strong> este es un modelo didáctico. La representación de stack y heap, las instrucciones generadas y la disposición exacta de la memoria dependen del lenguaje, el compilador, la arquitectura y el entorno.</p>
+    </section>
+  </main>
+</body>
+</html>
